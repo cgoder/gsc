@@ -1,0 +1,2 @@
+# gsc
+go stream core
