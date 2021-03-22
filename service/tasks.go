@@ -98,7 +98,7 @@ func (t *gscTask) TaskGet(msg Message) (string, error) {
 		}
 	}
 
-	return "", ErrorTaskExisit
+	return "", ErrorTaskNotFound
 }
 
 func (t *gscTask) TaskStatusGet(tid string) (Status, error) {
@@ -191,8 +191,7 @@ func handleMessages() {
 			} else {
 				log.Errorln("add task fail. ", JsonFormat(msg))
 			}
-		case prefixStop:
-		case prefixCancel:
+		case prefixStop, prefixCancel:
 			if tid, err := taskMap.TaskGet(msg); err == nil {
 				stopProcess(tid)
 				log.Debugln("task remove success.", JsonFormat(msg))
