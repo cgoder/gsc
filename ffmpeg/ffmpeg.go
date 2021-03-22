@@ -3,12 +3,15 @@ package ffmpeg
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -47,13 +50,12 @@ type progress struct {
 type ffmpegOptions struct {
 	Input  string
 	Output string
+	Raw    []string `json:"raw"` // Raw flag options.
 
 	Format formatOptions `json:"format"`
 	Video  videoOptions  `json:"video"`
 	Audio  audioOptions  `json:"audio"`
 	Filter filterOptions `json:"filter"`
-
-	Raw []string `json:"raw"` // Raw flag options.
 }
 
 type formatOptions struct {
@@ -111,7 +113,7 @@ type filterOptions struct {
 }
 
 // Run runs the ffmpeg encoder with options.
-func (f *FFmpeg) Run(input, output, data string) error {
+func (f *FFmpeg) Run(ctx context.Context, input, output, data string) error {
 
 	// Parse options and add to args slice.
 	args := parseOptions(input, output, data)
@@ -130,7 +132,7 @@ func (f *FFmpeg) Run(input, output, data string) error {
 	}
 
 	// Send progress updates.
-	go f.trackProgress()
+	go f.trackProgress(ctx)
 
 	// Update progress struct.
 	f.updateProgress(stdout)
@@ -149,12 +151,12 @@ func (f *FFmpeg) Run(input, output, data string) error {
 
 // Cancel stops an FFmpeg job from running.
 func (f *FFmpeg) Cancel() {
-	log.Println("killing ffmpeg process")
+	log.Debugln("killing ffmpeg process")
 	f.isCancelled = true
 	if err := f.cmd.Process.Kill(); err != nil {
 		log.Errorln("failed to kill process: ", err)
 	}
-	log.Println("killed ffmpeg process")
+	log.Debugln("killed ffmpeg process")
 }
 
 // Version gets the ffmpeg version.
@@ -221,14 +223,17 @@ func (f *FFmpeg) setProgressParts(parts []string) {
 	}
 }
 
-func (f *FFmpeg) trackProgress() {
+func (f *FFmpeg) trackProgress(ctx context.Context) {
 	f.Progress.quit = make(chan struct{})
 	ticker := time.NewTicker(updateInterval)
+	defer ticker.Stop()
 
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case <-f.Progress.quit:
-			ticker.Stop()
+
 			return
 		}
 	}
@@ -242,17 +247,28 @@ func (f *FFmpeg) finish() {
 // This should match the options mapped by:
 // https://github.com/alfg/ffmpeg-commander/blob/master/src/ffmpeg.js
 func parseOptions(input, output, data string) []string {
+
+	var stdoutName string
+	if runtime.GOOS == "windows" {
+		// pipe:1 is the windows equivalent of /dev/stdout
+		stdoutName = "pipe:1"
+	} else {
+		stdoutName = os.Stdout.Name()
+	}
+
 	args := []string{
 		"-hide_banner",
 		"-loglevel", "error", // Set loglevel to fail job on errors.
-		"-progress", "pipe:1",
+		"-progress", stdoutName,
 		"-i", input,
 	}
 
 	// Decode JSON get options list from data.
 	options := &ffmpegOptions{}
 	if err := json.Unmarshal([]byte(data), &options); err != nil {
-		panic(err)
+		log.Errorln("parse ffmpeg option fail. ", data)
+		// panic(err)
+		return nil
 	}
 
 	// If raw options provided, add the list of raw options from ffmpeg presets.
@@ -261,6 +277,7 @@ func parseOptions(input, output, data string) []string {
 			args = append(args, strings.Split(v, " ")...)
 		}
 		args = append(args, output)
+		log.Debugln("ffmpeg args: ", args)
 		return args
 	}
 

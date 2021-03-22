@@ -9,8 +9,23 @@ import (
 func main() {
 	cmd.ParseArgs()
 
-	if err := service.Run(); err != nil {
+	log.SetLevel(log.DebugLevel)
+
+	//init service
+	if err := service.Init(); err != nil {
 		log.Errorln(err.Error())
 	}
+
+	// //send task cmd
+	// start service.Message
+	// if _, err := service.Start(start); err != nil {
+	// 	log.Errorln(err.Error())
+	// }
+
+	// //stop/cancel task cmd
+	// stop service.Message
+	// if err := service.Stop(stop); err != nil {
+	// 	log.Errorln(err.Error())
+	// }
 
 }

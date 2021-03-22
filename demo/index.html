@@ -1,6 +1,6 @@
 <!DOCTYPE html>
   <meta charset="utf-8" />
-  <title>WebSocket Test Client</title>
+  <title>Demo Client</title>
   <style>
       .controls input,
       .controls textarea {
@@ -10,11 +10,11 @@
       }
   </style>
   <body>
-    <h1>WebSocket Test Client</h1>
+    <h1>Demo Client</h1>
 
     <div class="controls">
         <label for="input">Input</label>
-        <input id="input" value="./demo/tears-of-steel-5s.mp4" />
+        <input id="input" value="./demo/2.flv" />
 
         <label for="output">Output</label>
         <input id="output" value="./demo/output.mp4" />
@@ -31,51 +31,64 @@
         var wsUri = "ws://localhost:8080/ws";
         var log;
         var payload = {
-            "format": {
-                "container": "mp4",
-                "clip": false
-            },
-            "video": {
-                "codec": "libx264",
-                "preset": "veryslow",
-                "pass": "1",
-                "crf": 23,
-                "pixel_format": "auto",
-                "frame_rate": "auto",
-                "speed": "auto",
-                "tune": "none",
-                "profile": "none",
-                "level": "none",
-                "faststart": false,
-                "size": "source",
-                "width": "1080",
-                "height": "1920",
-                "format": "widescreen",
-                "aspect": "auto",
-                "scaling": "auto",
-                "codec_options": ""
-            },
-            "audio": {
-                "codec": "copy",
-                "channel": "source",
-                "quality": "auto",
-                "sampleRate": "auto",
-                "volume": "100"
-            },
-            "filter": {
-                "deband": false,
-                "deshake": false,
-                "deflicker": false,
-                "dejudder": false,
-                "denoise": "none",
-                "deinterlace": "none",
-                "brightness": "0",
-                "contrast": "1",
-                "saturation": "0",
-                "gamma": "0",
-                "acontrast": "33"
-            }
-        };
+            "raw":[
+                "-c:v libx264",
+                "-vf scale=1280:-1",
+                "-preset veryslow",
+                "-crf 24",
+                "-ac 2",
+                "-c:a aac",
+                "-strict -2",
+                "-b:a 128k",
+                "-y"
+            ]
+        }
+        // var payload = {
+        //     "format": {
+        //         "container": "mp4",
+        //         "clip": false
+        //     },
+        //     "video": {
+        //         "codec": "libx264",
+        //         "preset": "veryslow",
+        //         "pass": "1",
+        //         "crf": 23,
+        //         "pixel_format": "auto",
+        //         "frame_rate": "auto",
+        //         "speed": "auto",
+        //         "tune": "none",
+        //         "profile": "none",
+        //         "level": "none",
+        //         "faststart": false,
+        //         "size": "source",
+        //         "width": "1080",
+        //         "height": "1920",
+        //         "format": "widescreen",
+        //         "aspect": "auto",
+        //         "scaling": "auto",
+        //         "codec_options": ""
+        //     },
+        //     "audio": {
+        //         "codec": "copy",
+        //         "channel": "source",
+        //         "quality": "auto",
+        //         "sampleRate": "auto",
+        //         "volume": "100"
+        //     },
+        //     "filter": {
+        //         "deband": false,
+        //         "deshake": false,
+        //         "deflicker": false,
+        //         "dejudder": false,
+        //         "denoise": "none",
+        //         "deinterlace": "none",
+        //         "brightness": "0",
+        //         "contrast": "1",
+        //         "saturation": "0",
+        //         "gamma": "0",
+        //         "acontrast": "33"
+        //     }
+        // };
 
         function init() {
             document.getElementById("payload").textContent = JSON.stringify(payload, null, 2);
@@ -116,9 +129,9 @@
         }
 
         function sendPayload(input, output, payload) {
-            writeToScreen("SENT: " + JSON.stringify({ type: 'encode', input: input, output: output, payload: payload }));
+            writeToScreen("SENT: " + JSON.stringify({ type: 'gsc', input: input, output: output, payload: payload }));
             websocket.send(JSON.stringify({
-                type: 'encode',
+                type: 'gsc',
                 input: input,
                 output: output,
                 payload: payload
