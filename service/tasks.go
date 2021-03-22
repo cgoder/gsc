@@ -194,7 +194,7 @@ func handleMessages() {
 		case prefixStop, prefixCancel:
 			if tid, err := taskMap.TaskGet(msg); err == nil {
 				stopProcess(tid)
-				log.Debugln("task remove success.", JsonFormat(msg))
+				log.Debugln("task remove success.", tid)
 			} else {
 				log.Errorln("remove task fail. ", tid, err)
 			}
