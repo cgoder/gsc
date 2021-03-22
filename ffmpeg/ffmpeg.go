@@ -119,7 +119,8 @@ func (f *FFmpeg) Run(ctx context.Context, input, output, data string) error {
 	args := parseOptions(input, output, data)
 
 	// Execute command.
-	f.cmd = exec.Command(ffmpegCmd, args...)
+	// f.cmd = exec.Command(ffmpegCmd, args...)
+	f.cmd = exec.CommandContext(ctx, ffmpegCmd, args...)
 	// log.Println("generated output: ", f.cmd.String())
 	stdout, _ := f.cmd.StdoutPipe()
 

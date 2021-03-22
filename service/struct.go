@@ -1,8 +1,8 @@
 package service
 
 type GscMsg struct {
-	Cmd string
-	Msg Message
+	Flag string
+	Msg  Message
 }
 
 // Message payload from client.
@@ -15,8 +15,9 @@ type Message struct {
 
 // Status response to client.
 type Status struct {
-	Percent float64 `json:"percent"`
-	Speed   string  `json:"speed"`
-	FPS     float64 `json:"fps"`
-	Err     string  `json:"err,omitempty"`
+	Progress int     `json:"progress"`
+	Percent  float64 `json:"percent"`
+	Speed    string  `json:"speed"`
+	FPS      float64 `json:"fps"`
+	Err      string  `json:"err,omitempty"`
 }

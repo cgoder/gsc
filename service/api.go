@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 
+	"github.com/cgoder/gsc/ffmpeg"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -26,10 +27,10 @@ func Init() error {
 }
 
 func Start(msg GscMsg) error {
-	if msg.Cmd == prefixStart {
-		broadcast <- msg.Msg
+	if msg.Flag == prefixFlag {
+		taskCh <- msg.Msg
 	} else {
-		err := errors.New("gsc unsupport cmd: " + msg.Cmd)
+		err := errors.New("gsc unsupport cmd: " + msg.Flag)
 		log.Errorln(err.Error(), JsonFormat(msg))
 		return err
 	}
@@ -37,12 +38,16 @@ func Start(msg GscMsg) error {
 }
 
 func Stop(msg GscMsg) error {
-	if msg.Cmd == prefixStop {
-		broadcast <- msg.Msg
+	if msg.Flag == prefixFlag {
+		taskCh <- msg.Msg
 	} else {
-		err := errors.New("gsc unsupport cmd: " + msg.Cmd)
+		err := errors.New("gsc unsupport cmd: " + msg.Flag)
 		log.Errorln(err.Error(), JsonFormat(msg))
 		return err
 	}
 	return nil
+}
+
+func GetInfo(src string) (*ffmpeg.FFProbeResponse, error) {
+	return probe(src)
 }

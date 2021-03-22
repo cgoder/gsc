@@ -12,62 +12,104 @@ import (
 )
 
 var (
-	prefixCmd    = "gsc"
+	prefixFlag   = "gsc"
 	prefixStart  = "start"
 	prefixStop   = "stop"
 	prefixCancel = "cancel"
 
 	//clients list
 	clients = make(map[*websocket.Conn]bool)
-	//task chan
-	broadcast = make(chan Message)
-
+	// progressSignal        = make(chan struct{})
 	progressCheckInterval = time.Second * 1
 )
 
-func runProcess(input, output, payload string) (string, error) {
-	var tid string
+func probe(input string) (*ffmpeg.FFProbeResponse, error) {
+	var pd *ffmpeg.FFProbeResponse
+	//probe source
+	probe := ffmpeg.FFProbe{}
+	pd, err := probe.Run(input)
+	if err != nil {
+		log.Errorln("ffprobe fail: ", err.Error())
+		sendInfoClients(Status{Err: err.Error()})
+		return nil, err
+	}
+	return pd, nil
+}
 
+func runProcess(tid, input, output, payload string) error {
 	//probe source
 	probe := ffmpeg.FFProbe{}
 	probeData, err := probe.Run(input)
 	if err != nil {
 		log.Errorln("ffprobe fail: ", err.Error())
 		sendInfoClients(Status{Err: err.Error()})
-		return "", err
+		return err
 	}
-	log.Debugln(JsonFormat(probeData))
+	// log.Debugln(JsonFormat(probeData))
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	//update status
+	if st, err := taskMap.TaskStatusGet(tid); err != nil {
+		st.Progress = taskStatusDoing
+		taskMap.TaskStatusSet(tid, st)
+	}
+	taskMap.TaskInfoSet(tid, *probeData)
+	taskMap.TaskCtxSet(tid, Contx{ctx: ctx, cancel: cancel})
 
 	ffmpeg := &ffmpeg.FFmpeg{}
 
 	//progress
-	progressCh := make(chan struct{})
-	go trackProgress(context.TODO(), progressCh, probeData, ffmpeg)
-	defer close(progressCh)
+	go trackProgress(ctx, tid, probeData, ffmpeg)
 
-	// If we get an error back from ffmpeg, send an error ws message to clients.
-	err = ffmpeg.Run(context.TODO(), input, output, payload)
-	if err != nil {
-		log.Errorln(err.Error())
-		sendInfoClients(Status{Err: err.Error()})
-		return "", err
-	}
+	//ffmpeg process
+	go func() {
+		// If we get an error back from ffmpeg, send an error ws message to clients.
+		err = ffmpeg.Run(ctx, input, output, payload)
+		if err != nil {
+			log.Errorln(err.Error())
+			//update status
+			if st, err := taskMap.TaskStatusGet(tid); err != nil {
+				st.Progress = taskStatusFail
+				st.Err = err.Error()
+				taskMap.TaskStatusSet(tid, st)
+			}
+			sendInfoClients(Status{Err: err.Error()})
+			return
+		}
 
-	sendInfoClients(Status{Percent: 100})
-	return tid, nil
+		//update status
+		if st, err := taskMap.TaskStatusGet(tid); err != nil {
+			st.Progress = taskStatusDone
+			st.Percent = 100
+			taskMap.TaskStatusSet(tid, st)
+		}
+		sendInfoClients(Status{Percent: 100})
+	}()
+
+	return nil
 }
 
-func trackProgress(ctx context.Context, progress <-chan struct{}, p *ffmpeg.FFProbeResponse, f *ffmpeg.FFmpeg) {
+func stopProcess(tid string) {
+	if ctx, err := taskMap.TaskCtxGet(tid); err == nil {
+		ctx.cancel()
+		if err := taskMap.TaskDelete(tid); err != nil {
+			log.Errorln("task delete fail! ", tid)
+		}
+		sendInfoClients(Status{Progress: taskStatusCancel})
+	} else {
+		log.Errorln("stop process fail! ", tid)
+	}
+}
+
+func trackProgress(ctx context.Context, tid string, p *ffmpeg.FFProbeResponse, f *ffmpeg.FFmpeg) {
 	ticker := time.NewTicker(progressCheckInterval)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Debugln("cancel trackProgress.")
-			return
-		case <-progress:
-			log.Debugln("Waiting for next job...")
+			log.Debugln("cancel trackProgress. tid: ", tid)
 			return
 		case <-ticker.C:
 			currentFrame := f.Progress.Frame
@@ -85,6 +127,15 @@ func trackProgress(ctx context.Context, progress <-chan struct{}, p *ffmpeg.FFPr
 
 			} else {
 				pct = f.Progress.Progress
+			}
+
+			//update status
+			if st, err := taskMap.TaskStatusGet(tid); err != nil {
+				st.Progress = taskStatusDoing
+				st.Percent = pct
+				st.FPS = fps
+				st.Speed = speed
+				taskMap.TaskStatusSet(tid, st)
 			}
 			//write progress to clients
 			sendInfoClients(Status{Percent: pct, Speed: speed, FPS: fps})
@@ -109,24 +160,8 @@ func checkFFmpeg() error {
 	return nil
 }
 
-func handleMessages() {
-	for {
-		msg := <-broadcast
-		// log.Infoln(JsonFormat(msg))
-
-		if msg.Type == prefixCmd {
-			tid, err := runProcess(msg.Input, msg.Output, msg.Payload)
-			if err != nil {
-				log.Errorln("process fail! ", tid, err.Error())
-			}
-		} else {
-			log.Errorln("unsupport cmd: ", JsonFormat(msg))
-		}
-	}
-}
-
-func sendInfoClients(stas Status) error {
-	p := &stas
+func sendInfoClients(stats Status) error {
+	p := &stats
 
 	for client := range clients {
 		err := client.WriteJSON(p)

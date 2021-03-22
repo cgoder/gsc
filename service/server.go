@@ -44,6 +44,7 @@ type file struct {
 
 func startServer() error {
 	http.HandleFunc("/ws", handleConnections)
+
 	http.HandleFunc("/files", handleFiles)
 	http.Handle("/", http.FileServer(http.Dir("./")))
 
@@ -79,13 +80,14 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 			delete(clients, ws)
 			break
 		}
-		log.Debugln(JsonFormat(msg))
-		// Send the newly received message to the broadcast channel.
-		broadcast <- msg
+		// log.Debugln(JsonFormat(msg))
+		// Send the newly received message to the task channel.
+		taskCh <- msg
 	}
 }
 
 func handleFiles(w http.ResponseWriter, r *http.Request) {
+	log.Debugln(r.URL)
 	prefix := r.URL.Query().Get("prefix")
 	if prefix == "" {
 		prefix = "."

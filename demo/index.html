@@ -21,7 +21,8 @@
 
         <label for="payload">Payload</label>
         <textarea id="payload" rows="6"></textarea>
-        <button id="submit">Submit</button>
+        <button id="start">Start</button>
+        <button id="stop">Stop</button>
     </div>
 
     <h4>Log</h4>
@@ -34,12 +35,12 @@
             "raw":[
                 "-c:v libx264",
                 "-vf scale=1280:-1",
-                "-preset veryslow",
-                "-crf 24",
-                "-ac 2",
-                "-c:a aac",
-                "-strict -2",
-                "-b:a 128k",
+                // "-preset veryslow",
+                // "-crf 24",
+                // "-ac 2",
+                // "-c:a aac",
+                // "-strict -2",
+                // "-b:a 128k",
                 "-y"
             ]
         }
@@ -92,7 +93,8 @@
 
         function init() {
             document.getElementById("payload").textContent = JSON.stringify(payload, null, 2);
-            document.getElementById("submit").addEventListener('click', onSubmit);
+            document.getElementById("start").addEventListener('click', onStart);
+            document.getElementById("stop").addEventListener('click', onStop);
             log = document.getElementById("log");
             startWebSocket();
         }
@@ -121,17 +123,24 @@
             writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
         }
 
-        function onSubmit(evt) {
+        function onStart(evt) {
             var input = document.getElementById("input").value;
             var output = document.getElementById("output").value;
             var payload = document.getElementById("payload").value;
-            sendPayload(input, output, payload);
+            sendPayload("start",input, output, payload);
         }
 
-        function sendPayload(input, output, payload) {
-            writeToScreen("SENT: " + JSON.stringify({ type: 'gsc', input: input, output: output, payload: payload }));
+        function onStop(evt) {
+            var input = document.getElementById("input").value;
+            var output = document.getElementById("output").value;
+            var payload = document.getElementById("payload").value;
+            sendPayload("stop",input, output, payload);
+        }
+
+        function sendPayload(cmd,input, output, payload) {
+            writeToScreen("SENT: " + JSON.stringify({ type: cmd, input: input, output: output, payload: payload }));
             websocket.send(JSON.stringify({
-                type: 'gsc',
+                type: cmd,
                 input: input,
                 output: output,
                 payload: payload
