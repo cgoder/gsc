@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/cgoder/gsc/ffmpeg"
-	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,8 +16,6 @@ var (
 	prefixStop   = "stop"
 	prefixCancel = "cancel"
 
-	//clients list
-	clients = make(map[*websocket.Conn]bool)
 	// progressSignal        = make(chan struct{})
 	progressCheckInterval = time.Second * 1
 )
@@ -74,7 +71,7 @@ func runProcess(tid, input, output, payload string) error {
 				st.Err = err.Error()
 				taskMap.TaskStatusSet(tid, st)
 			}
-			sendInfoClients(Status{Err: err.Error()})
+			sendInfoClients(Status{Progress: taskStatusFail, Err: err.Error()})
 			return
 		}
 
@@ -157,19 +154,5 @@ func checkFFmpeg() error {
 		return err
 	}
 	log.Debugln("Checking FFprobe version...\u001b[32m" + version + "\u001b[0m\n")
-	return nil
-}
-
-func sendInfoClients(stats Status) error {
-	p := &stats
-
-	for client := range clients {
-		err := client.WriteJSON(p)
-		if err != nil {
-			log.Errorln("error: %w", err)
-			client.Close()
-			delete(clients, client)
-		}
-	}
 	return nil
 }

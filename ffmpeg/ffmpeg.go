@@ -141,10 +141,12 @@ func (f *FFmpeg) Run(ctx context.Context, input, output, data string) error {
 	err = f.cmd.Wait()
 	if err != nil {
 		if f.isCancelled {
-			return errors.New("cancelled")
+			log.Debugln("ffmpeg be cancelled")
+			return nil
 		}
 		f.finish()
-		return errors.New(stderr.String())
+		log.Errorln("ffmpeg cmd exec err: ", err.Error(), f.isCancelled)
+		return errors.New(err.Error() + stderr.String())
 	}
 	f.finish()
 	return nil
