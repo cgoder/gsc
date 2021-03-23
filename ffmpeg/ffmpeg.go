@@ -239,8 +239,6 @@ func (f *FFmpeg) trackProgress(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		default:
-
 		}
 	}
 }
