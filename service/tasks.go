@@ -19,8 +19,8 @@ const (
 	taskStatusTodo
 	taskStatusDoing
 	taskStatusDone
-	taskStatusFail
 	taskStatusCancel
+	taskStatusFail
 )
 
 type Contx struct {
@@ -29,6 +29,7 @@ type Contx struct {
 }
 
 type Task struct {
+	id      string
 	cmd     Message
 	stats   Status
 	srcInfo ffmpeg.FFProbeResponse
@@ -51,10 +52,13 @@ func (t *gscTask) TaskAdd(msg Message) (string, error) {
 			return "", ErrorTaskExisit
 		}
 	}
+
+	var task Task
 	var err error
 	tid := uuid.Must(uuid.NewV4(), err).String()
+	task.id = tid
 
-	t.tasks[tid] = new(Task)
+	t.tasks[tid] = &task
 	t.tasks[tid].cmd = msg
 	t.tasks[tid].stats.Progress = taskStatusTodo
 
