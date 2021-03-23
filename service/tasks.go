@@ -26,14 +26,16 @@ const (
 	taskStatusFail
 )
 
-type Contx struct {
-	ctx    context.Context
-	cancel context.CancelFunc
-}
+// type Contx struct {
+// 	ctx    context.Context
+// 	cancel context.CancelFunc
+// }
 
 type FFInfo struct {
-	ffctx    Contx
-	srcProbe ffmpeg.FFProbeResponse
+	ffmpeg  *ffmpeg.FFmpeg
+	ffProbe ffmpeg.FFProbeResponse
+	ctx     context.Context
+	cancel  context.CancelFunc
 }
 type Task struct {
 	ID string
@@ -139,50 +141,75 @@ func (t *gscTask) TaskGet(msg Message) (string, error) {
 // 	return ErrorTaskUpdateFail
 // }
 
-func (t *gscTask) TaskSrcProbeGet(tid string) (ffmpeg.FFProbeResponse, error) {
-	var info ffmpeg.FFProbeResponse
+// func (t *gscTask) TaskSrcProbeGet(tid string) (ffmpeg.FFProbeResponse, error) {
+// 	var info ffmpeg.FFProbeResponse
+// 	t.m.Lock()
+// 	defer t.m.Unlock()
+
+// 	if _, ok := t.tasks[tid]; ok {
+// 		info = t.tasks[tid].ff.srcProbe
+// 		return info, nil
+// 	}
+
+// 	return info, ErrorTaskNotFound
+// }
+
+// func (t *gscTask) TaskSrcProbeSet(tid string, info ffmpeg.FFProbeResponse) error {
+// 	t.m.Lock()
+// 	defer t.m.Unlock()
+
+// 	if _, ok := t.tasks[tid]; ok {
+// 		t.tasks[tid].ff.srcProbe = info
+// 		return nil
+// 	}
+
+// 	return ErrorTaskUpdateFail
+// }
+
+// func (t *gscTask) TaskCtxGet(tid string) (Contx, error) {
+// 	var ctx Contx
+// 	t.m.Lock()
+// 	defer t.m.Unlock()
+
+// 	if _, ok := t.tasks[tid]; ok {
+// 		ctx = t.tasks[tid].ff.ffctx
+// 		return ctx, nil
+// 	}
+
+// 	return ctx, ErrorTaskUpdateFail
+// }
+
+// func (t *gscTask) TaskCtxSet(tid string, ctx Contx) error {
+// 	t.m.Lock()
+// 	defer t.m.Unlock()
+
+// 	if _, ok := t.tasks[tid]; ok {
+// 		t.tasks[tid].ff.ffctx = ctx
+// 		return nil
+// 	}
+
+// 	return ErrorTaskUpdateFail
+// }
+
+func (t *gscTask) TaskFFGet(tid string) (FFInfo, error) {
+	var ff FFInfo
 	t.m.Lock()
 	defer t.m.Unlock()
 
 	if _, ok := t.tasks[tid]; ok {
-		info = t.tasks[tid].ff.srcProbe
-		return info, nil
+		ff = t.tasks[tid].ff
+		return ff, nil
 	}
 
-	return info, ErrorTaskNotFound
+	return ff, ErrorTaskUpdateFail
 }
 
-func (t *gscTask) TaskSrcProbeSet(tid string, info ffmpeg.FFProbeResponse) error {
+func (t *gscTask) TaskFFSet(tid string, ff FFInfo) error {
 	t.m.Lock()
 	defer t.m.Unlock()
 
 	if _, ok := t.tasks[tid]; ok {
-		t.tasks[tid].ff.srcProbe = info
-		return nil
-	}
-
-	return ErrorTaskUpdateFail
-}
-
-func (t *gscTask) TaskCtxGet(tid string) (Contx, error) {
-	var ctx Contx
-	t.m.Lock()
-	defer t.m.Unlock()
-
-	if _, ok := t.tasks[tid]; ok {
-		ctx = t.tasks[tid].ff.ffctx
-		return ctx, nil
-	}
-
-	return ctx, ErrorTaskUpdateFail
-}
-
-func (t *gscTask) TaskCtxSet(tid string, ctx Contx) error {
-	t.m.Lock()
-	defer t.m.Unlock()
-
-	if _, ok := t.tasks[tid]; ok {
-		t.tasks[tid].ff.ffctx = ctx
+		t.tasks[tid].ff = ff
 		return nil
 	}
 

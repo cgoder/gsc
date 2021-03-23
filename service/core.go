@@ -42,16 +42,14 @@ func runProcess(tid, input, output, payload string) error {
 		metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusFail, Err: err.Error()})
 		return err
 	}
-	// log.Debugln(JsonFormat(probeData))
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	//update status
-	taskMap.TaskSrcProbeSet(tid, *probeData)
-	taskMap.TaskCtxSet(tid, Contx{ctx: ctx, cancel: cancel})
-	metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusDoing})
-
 	ffmpeg := &ffmpeg.FFmpeg{}
+
+	//update status
+	taskMap.TaskFFSet(tid, FFInfo{ffmpeg: ffmpeg, ffProbe: *probeData, ctx: ctx, cancel: cancel})
+	metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusDoing})
 
 	//progress
 	go trackProgress(ctx, tid, probeData, ffmpeg)
@@ -62,20 +60,23 @@ func runProcess(tid, input, output, payload string) error {
 		err = ffmpeg.Run(ctx, input, output, payload)
 		if err != nil {
 			log.Errorln(err.Error())
-			//update status
-			// metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusFail, Err: err.Error()})
+
+			metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusFail, Err: err.Error()})
 			return
 		}
-		//update status
-		metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusDone, Percent: 100})
+
+		if !ffmpeg.BeCancel() {
+			metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusDone, Percent: 100})
+		}
 	}()
 
 	return nil
 }
 
 func stopProcess(tid string) {
-	if ctx, err := taskMap.TaskCtxGet(tid); err == nil {
-		ctx.cancel()
+	if ff, err := taskMap.TaskFFGet(tid); err == nil {
+		ff.cancel()
+		ff.ffmpeg.Cancel()
 		metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusCancel})
 	} else {
 		log.Errorln("stop process fail! ", tid)

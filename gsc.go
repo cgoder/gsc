@@ -7,25 +7,17 @@ import (
 )
 
 func main() {
-	cmd.ParseArgs()
-
 	log.SetLevel(log.DebugLevel)
 
-	//init service
-	if err := service.Init(); err != nil {
-		log.Errorln(err.Error())
-	}
+	cmd.ParseArgs()
 
-	// //send task cmd
-	// start service.Message
-	// if _, err := service.Start(start); err != nil {
-	// 	log.Errorln(err.Error())
-	// }
+	//pprof
+	go service.DebugRuntime()
 
-	// //stop/cancel task cmd
-	// stop service.Message
-	// if err := service.Stop(stop); err != nil {
-	// 	log.Errorln(err.Error())
-	// }
+	//init server
+	go service.Init()
+
+	//regist and server rpc service
+	service.ServiceRegist()
 
 }

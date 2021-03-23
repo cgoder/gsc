@@ -32,7 +32,7 @@ type FFmpeg struct {
 }
 
 type progress struct {
-	quit chan struct{}
+	// quit chan struct{}
 
 	Frame      int
 	FPS        float64
@@ -133,7 +133,7 @@ func (f *FFmpeg) Run(ctx context.Context, input, output, data string) error {
 	}
 
 	// Send progress updates.
-	go f.trackProgress(ctx)
+	// go f.trackProgress(ctx)
 
 	// Update progress struct.
 	f.updateProgress(stdout)
@@ -160,6 +160,10 @@ func (f *FFmpeg) Cancel() {
 		log.Errorln("failed to kill process: ", err)
 	}
 	log.Debugln("killed ffmpeg process")
+}
+
+func (f *FFmpeg) BeCancel() bool {
+	return f.isCancelled
 }
 
 // Version gets the ffmpeg version.
@@ -227,7 +231,7 @@ func (f *FFmpeg) setProgressParts(parts []string) {
 }
 
 func (f *FFmpeg) trackProgress(ctx context.Context) {
-	f.Progress.quit = make(chan struct{})
+	// f.Progress.quit = make(chan struct{})
 	ticker := time.NewTicker(updateInterval)
 	defer ticker.Stop()
 
@@ -235,20 +239,18 @@ func (f *FFmpeg) trackProgress(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case <-f.Progress.quit:
+		default:
 
-			return
 		}
 	}
 }
 
 func (f *FFmpeg) finish() {
-	close(f.Progress.quit)
+	// close(f.Progress.quit)
 }
 
 // Parse options from JSON payload.
 // This should match the options mapped by:
-// https://github.com/alfg/ffmpeg-commander/blob/master/src/ffmpeg.js
 func parseOptions(input, output, data string) []string {
 
 	var stdoutName string

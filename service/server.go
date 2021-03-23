@@ -75,13 +75,13 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ClientsRemove(cid)
 
-	log.Debugf("Client connected! cid: ", cid)
+	log.Debugln("Client connected! cid: ", cid)
 	for {
 		var msg Message
 		// Read in a new message as JSON and map it to a Message object.
 		err := ws.ReadJSON(&msg)
 		if err != nil {
-			log.Debugf("Client disconnect! cid: ", cid)
+			log.Debugln("Client disconnect! cid: ", cid)
 			break
 		}
 		// log.Debugln(JsonFormat(msg))

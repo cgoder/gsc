@@ -29,20 +29,19 @@ func MetricsCollect() {
 	tick := time.NewTicker(time.Second * metricIntvl)
 	defer tick.Stop()
 
-	// metricMap.m.Lock()
-	// defer metricMap.m.Unlock()
-
 	for {
 		select {
 		case <-tick.C:
 			//TODO: write to clients
 			// log.Debugln("send metrics. cnt:", len(metricMap.metrics))
+			// metricMap.m.Lock()
 			for _, mt := range metricMap.metrics {
 				// if mt.Statu != taskStatusDoing {
 				// 	continue
 				// }
 				sendMetric2Clients(mt)
 			}
+			// metricMap.m.Unlock()
 
 		default:
 			//TODO:check task status. clean metric.

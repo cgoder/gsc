@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -15,20 +16,13 @@ const (
 	██║   ██║╚════██║██║     
 	╚██████╔╝███████║╚██████╗
 	 ╚═════╝ ╚══════╝ ╚═════╝
-													 
-													 
-	`
-	version = "gsc version 0.0.1"
-	usage   = `
-Usage:
-  gsc            Run server.
-  gsc version    Print version.
-  gsc help       This help text.
+													 							 
 	`
 )
 
 func ParseArgs() {
 	log.Println(banner)
+	log.Println("version " + time.Now().Local().String() + "\n\n")
 
 	args := os.Args
 
@@ -37,12 +31,4 @@ func ParseArgs() {
 		return
 	}
 
-	// Print version, help or set port.
-	if args[1] == "version" || args[1] == "-v" {
-		log.Println(version)
-		os.Exit(1)
-	} else if args[1] == "help" || args[1] == "-h" {
-		log.Println(usage)
-		os.Exit(1)
-	}
 }
