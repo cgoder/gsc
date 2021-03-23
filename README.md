@@ -12,7 +12,7 @@ $ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build .
 ## Docker
 ### docker build
 ```bash
-docker build -t gcoder/gsc:latest .
+docker build -t gsf/gsc:latest .
 ```
 ### docker run
 ```bash
