@@ -27,7 +27,7 @@ func probe(input string) (*ffmpeg.FFProbeResponse, error) {
 	pd, err := probe.Run(input)
 	if err != nil {
 		log.Errorln("ffprobe fail: ", err.Error())
-		sendInfoClients(Status{Err: err.Error()})
+		// metricMap.MetricsSet(tid, TaskMetric{Statu: taskStatusFail, Err: err.Error()})
 		return nil, err
 	}
 	return pd, nil
@@ -39,7 +39,7 @@ func runProcess(tid, input, output, payload string) error {
 	probeData, err := probe.Run(input)
 	if err != nil {
 		log.Errorln("ffprobe fail: ", err.Error())
-		sendInfoClients(Status{Err: err.Error()})
+		metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusFail, Err: err.Error()})
 		return err
 	}
 	// log.Debugln(JsonFormat(probeData))
@@ -47,12 +47,9 @@ func runProcess(tid, input, output, payload string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	//update status
-	if st, err := taskMap.TaskStatusGet(tid); err != nil {
-		st.Progress = taskStatusDoing
-		taskMap.TaskStatusSet(tid, st)
-	}
-	taskMap.TaskInfoSet(tid, *probeData)
+	taskMap.TaskSrcProbeSet(tid, *probeData)
 	taskMap.TaskCtxSet(tid, Contx{ctx: ctx, cancel: cancel})
+	metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusDoing})
 
 	ffmpeg := &ffmpeg.FFmpeg{}
 
@@ -66,22 +63,11 @@ func runProcess(tid, input, output, payload string) error {
 		if err != nil {
 			log.Errorln(err.Error())
 			//update status
-			if st, err := taskMap.TaskStatusGet(tid); err != nil {
-				st.Progress = taskStatusFail
-				st.Err = err.Error()
-				taskMap.TaskStatusSet(tid, st)
-			}
-			sendInfoClients(Status{Progress: taskStatusFail, Err: err.Error()})
+			// metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusFail, Err: err.Error()})
 			return
 		}
-
 		//update status
-		if st, err := taskMap.TaskStatusGet(tid); err != nil {
-			st.Progress = taskStatusDone
-			st.Percent = 100
-			taskMap.TaskStatusSet(tid, st)
-		}
-		sendInfoClients(Status{Percent: 100})
+		metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusDone, Percent: 100})
 	}()
 
 	return nil
@@ -90,10 +76,7 @@ func runProcess(tid, input, output, payload string) error {
 func stopProcess(tid string) {
 	if ctx, err := taskMap.TaskCtxGet(tid); err == nil {
 		ctx.cancel()
-		if err := taskMap.TaskDelete(tid); err != nil {
-			log.Errorln("task delete fail! ", tid)
-		}
-		sendInfoClients(Status{Progress: taskStatusCancel})
+		metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusCancel})
 	} else {
 		log.Errorln("stop process fail! ", tid)
 	}
@@ -127,15 +110,7 @@ func trackProgress(ctx context.Context, tid string, p *ffmpeg.FFProbeResponse, f
 			}
 
 			//update status
-			if st, err := taskMap.TaskStatusGet(tid); err != nil {
-				st.Progress = taskStatusDoing
-				st.Percent = pct
-				st.FPS = fps
-				st.Speed = speed
-				taskMap.TaskStatusSet(tid, st)
-			}
-			//write progress to clients
-			sendInfoClients(Status{Percent: pct, Speed: speed, FPS: fps})
+			metricMap.MetricsSet(tid, TaskMetric{ID: tid, Statu: taskStatusDoing, Percent: pct, Speed: speed, FPS: fps})
 		}
 	}
 }

@@ -18,7 +18,7 @@ func Init() error {
 	}
 
 	// Handles incoming WS messages from client.
-	go handleMessages()
+	go HandleTaskMessages()
 
 	// HTTP/WS Server.
 	err = startServer()

@@ -13,11 +13,11 @@ type Message struct {
 	Payload string `json:"payload"`
 }
 
-// Status response to client.
-type Status struct {
-	Progress int     `json:"progress"`
-	Percent  float64 `json:"percent"`
-	Speed    string  `json:"speed"`
-	FPS      float64 `json:"fps"`
-	Err      string  `json:"err,omitempty"`
-}
+// // Status response to client.
+// type Status struct {
+// 	Progress int     `json:"progress"`
+// 	Percent  float64 `json:"percent"`
+// 	Speed    string  `json:"speed"`
+// 	FPS      float64 `json:"fps"`
+// 	Err      string  `json:"err,omitempty"`
+// }

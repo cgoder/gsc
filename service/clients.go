@@ -64,14 +64,14 @@ func ClientsGet(cid string) *Client {
 	return nil
 }
 
-func sendInfoClients(stats Status) error {
+func sendMetric2Clients(metric TaskMetric) error {
 	clientsMap.m.Lock()
 	defer clientsMap.m.Unlock()
 
-	p := &stats
+	m := &metric
 
 	for cid, client := range clientsMap.clients {
-		err := client.conn.WriteJSON(p)
+		err := client.conn.WriteJSON(m)
 		if err != nil {
 			log.Errorln("error: %w", err)
 			ClientsRemove(cid)
