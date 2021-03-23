@@ -44,6 +44,7 @@ func MetricsCollect() {
 			// metricMap.m.Unlock()
 
 		default:
+			time.Sleep(time.Millisecond * 10)
 			//TODO:check task status. clean metric.
 			// for id, _ := range metricMap.metrics {
 			// 	if sts, err := taskMap.TaskStatusGet(id); err == nil {
