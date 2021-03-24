@@ -11,12 +11,12 @@ import (
 )
 
 type Config struct {
-	Debug        bool   `mapstructure:"debug"`
-	LogLevel     string `mapstructure:"log_level"`
-	HTTPPort     string `mapstructure:"http_port"`
-	RPCPort      string `mapstructure:"rpc_port"`
-	DebugPort    string `mapstructure:"debug_port"`
-	RegisterAddr string `mapstructure:"register_addr"`
+	Debug        bool   `json:"debug"`
+	LogLevel     string `json:"log_level"`
+	HTTPPort     string `json:"http_port"`
+	RPCPort      string `json:"rpc_port"`
+	DebugPort    string `json:"debug_port"`
+	RegisterAddr string `json:"register_addr"`
 }
 
 var Conf Config
@@ -39,7 +39,8 @@ func LoadConfig() {
 	viper.AddConfigPath("./")
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Errorln("init config error:", err)
+		log.Errorln("read config file error:", err)
+		log.Errorln("load default config.")
 		// panic("init config error")
 	}
 
@@ -47,8 +48,9 @@ func LoadConfig() {
 	if err != nil {
 		log.Errorln("init config unmarshal error:", err)
 		// panic("init config unmarshal error")
+	} else {
+		log.Println("load config ok", Conf)
 	}
-	log.Println("load config ok", Conf)
 
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
