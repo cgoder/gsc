@@ -13,12 +13,12 @@ import (
 )
 
 type Config struct {
-	Debug        bool   `json:"debug"`
-	LogLevel     string `json:"log_level"`
-	HTTPPort     string `json:"http_port"`
-	RPCPort      string `json:"rpc_port"`
-	DebugPort    string `json:"debug_port"`
-	RegisterAddr string `json:"register_addr"`
+	Debug        bool   `mapstructure:"debug"`
+	LogLevel     string `mapstructure:"log_level"`
+	HTTPPort     string `mapstructure:"http_port"`
+	RPCPort      string `mapstructure:"rpc_port"`
+	DebugPort    string `mapstructure:"debug_port"`
+	RegisterAddr string `mapstructure:"register_addr"`
 }
 
 var (
@@ -74,6 +74,8 @@ func LoadConfig() {
 		configMD5 = tmpMD5
 		Conf = tmpConf
 		fmt.Println("Config file reload ok:", Conf)
+
+		ReloadConfig(Conf)
 	})
 
 	// init log
@@ -92,4 +94,21 @@ func LoadConfig() {
 		log.SetReportCaller(true)
 	}
 
+}
+
+func ReloadConfig(conf Config) {
+	level, _ := log.ParseLevel(conf.LogLevel)
+	log.SetLevel(level)
+	if !conf.Debug {
+		log.SetOutput(ioutil.Discard)
+		log.SetFormatter(&log.TextFormatter{
+			FullTimestamp: false,
+		})
+		log.SetReportCaller(false)
+	} else {
+		log.SetFormatter(&log.TextFormatter{
+			FullTimestamp: true,
+		})
+		log.SetReportCaller(true)
+	}
 }
