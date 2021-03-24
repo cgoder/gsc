@@ -2,9 +2,11 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"strings"
 
+	"github.com/cgoder/gsc/common"
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -19,7 +21,10 @@ type Config struct {
 	RegisterAddr string `json:"register_addr"`
 }
 
-var Conf Config
+var (
+	Conf      Config
+	configMD5 string
+)
 
 func LoadConfig() {
 	flag.Parse()
@@ -39,26 +44,36 @@ func LoadConfig() {
 	viper.AddConfigPath("./")
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Errorln("read config file error:", err)
-		log.Errorln("load default config.")
+		fmt.Println("read config file error:", err)
+		fmt.Println("load default config.")
 		// panic("init config error")
 	}
 
 	err = viper.Unmarshal(&Conf)
 	if err != nil {
-		log.Errorln("init config unmarshal error:", err)
+		fmt.Println("init config unmarshal error:", err)
 		// panic("init config unmarshal error")
 	} else {
-		log.Println("load config ok", Conf)
+		fmt.Println("load config ok", Conf)
 	}
 
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
-		if err != nil {
-			log.Errorln("init config unmarshal error:", err)
-			// panic("init config unmarshal error")
+		tmpMD5 := common.GetFileMd5("config.json")
+		if tmpMD5 == configMD5 {
+			fmt.Println("config file changed, but MD5 same.")
+			return
 		}
-		log.Println("Config file reload:", e)
+
+		var tmpConf Config
+		if err := viper.Unmarshal(&tmpConf); err != nil {
+			fmt.Println("Config file reload parse error:", err)
+			return
+		}
+
+		configMD5 = tmpMD5
+		Conf = tmpConf
+		fmt.Println("Config file reload ok:", Conf)
 	})
 
 	// init log
