@@ -13,12 +13,12 @@ import (
 )
 
 type Config struct {
-	Debug        bool   `mapstructure:"debug"`
-	LogLevel     string `mapstructure:"log_level"`
-	HTTPPort     string `mapstructure:"http_port"`
-	RPCPort      string `mapstructure:"rpc_port"`
-	DebugPort    string `mapstructure:"debug_port"`
-	RegisterAddr string `mapstructure:"register_addr"`
+	Debug        bool   `json:"debug"`
+	LogLevel     string `json:"log_level"`
+	HTTPPort     string `json:"http_port"`
+	RPCPort      string `json:"rpc_port"`
+	DebugPort    string `json:"debug_port"`
+	RegisterAddr string `json:"register_addr"`
 }
 
 var (
@@ -42,6 +42,7 @@ func LoadConfig() {
 	viper.SetConfigType("json")
 	viper.SetConfigName("config")
 	viper.AddConfigPath("./")
+	viper.AddConfigPath("/etc/")
 	err := viper.ReadInConfig()
 	if err != nil {
 		fmt.Println("read config file error:", err)
@@ -59,7 +60,7 @@ func LoadConfig() {
 
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
-		tmpMD5 := common.GetFileMd5("config.json")
+		tmpMD5 := common.GetFileMd5("/etc/config.json")
 		if tmpMD5 == configMD5 {
 			fmt.Println("config file changed, but MD5 same.")
 			return
