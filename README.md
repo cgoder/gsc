@@ -19,3 +19,7 @@ $ docker build -t gsf/gsc:latest .
 ```bash
 $ docker run -d -p 8080:8080 --name gsc gsf/gsc:latest
 ```
+
+## Demo Test
+### web
+> http://localhost:8080/demo/web
