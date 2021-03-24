@@ -13,9 +13,9 @@ $ make
 
 ## Build
 ```bash
-docker build -t gsf/gsc:latest .
+$ docker build -t gsf/gsc:latest .
 ```
 ## Run
 ```bash
-docker run -d -p 8080:8080 --name gsc gsf/gsc:latest
+$ docker run -d -p 8080:8080 --name gsc gsf/gsc:latest
 ```
