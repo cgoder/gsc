@@ -1,14 +1,8 @@
-# FROM golang:1.16-alpine as build
+FROM alpine:3.13
+MAINTAINER gcoder <gcoder@live.com>
 
-# WORKDIR .
-# # COPY . .
+RUN apk add --no-cache --update ffmpeg
 
-# RUN go get -d -v ./...
-# RUN go install -v ./...
-
-FROM alfg/ffmpeg:latest
-
-# WORKDIR /home
 ENV PATH=/opt/bin:$PATH
 
 COPY ./gsc /opt/bin/gsc
