@@ -1,23 +1,23 @@
 package main
 
 import (
-	"github.com/cgoder/gsc/cmd"
+	"github.com/cgoder/gsc/common"
+	"github.com/cgoder/gsc/config"
+	"github.com/cgoder/gsc/rpc"
 	"github.com/cgoder/gsc/service"
-	log "github.com/sirupsen/logrus"
 )
 
 func main() {
-	log.SetLevel(log.DebugLevel)
+	config.LoadConfig()
 
-	cmd.ParseArgs()
+	common.ParseArgs()
+
+	//regist and server rpc service
+	go rpc.ServiceRegist()
 
 	//pprof
 	go service.DebugRuntime()
-
 	//init server
-	go service.Init()
-
-	//regist and server rpc service
-	service.ServiceRegist()
+	service.Init()
 
 }

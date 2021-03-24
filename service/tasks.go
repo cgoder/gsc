@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/cgoder/gsc/common"
 	"github.com/cgoder/gsc/ffmpeg"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -116,81 +117,6 @@ func (t *gscTask) TaskGet(msg Message) (string, error) {
 	return "", ErrorTaskNotFound
 }
 
-// func (t *gscTask) TaskStatusGet(tid string) (TaskStatusType, error) {
-// 	var st TaskStatusType
-// 	t.m.Lock()
-// 	defer t.m.Unlock()
-
-// 	if _, ok := t.tasks[tid]; ok {
-// 		st = t.tasks[tid].Statu
-// 		return st, nil
-// 	}
-
-// 	return st, ErrorTaskNotFound
-// }
-
-// func (t *gscTask) TaskStatusSet(tid string, statu TaskStatusType) error {
-// 	t.m.Lock()
-// 	defer t.m.Unlock()
-
-// 	if _, ok := t.tasks[tid]; ok {
-// 		t.tasks[tid].Statu = statu
-// 		return nil
-// 	}
-
-// 	return ErrorTaskUpdateFail
-// }
-
-// func (t *gscTask) TaskSrcProbeGet(tid string) (ffmpeg.FFProbeResponse, error) {
-// 	var info ffmpeg.FFProbeResponse
-// 	t.m.Lock()
-// 	defer t.m.Unlock()
-
-// 	if _, ok := t.tasks[tid]; ok {
-// 		info = t.tasks[tid].ff.srcProbe
-// 		return info, nil
-// 	}
-
-// 	return info, ErrorTaskNotFound
-// }
-
-// func (t *gscTask) TaskSrcProbeSet(tid string, info ffmpeg.FFProbeResponse) error {
-// 	t.m.Lock()
-// 	defer t.m.Unlock()
-
-// 	if _, ok := t.tasks[tid]; ok {
-// 		t.tasks[tid].ff.srcProbe = info
-// 		return nil
-// 	}
-
-// 	return ErrorTaskUpdateFail
-// }
-
-// func (t *gscTask) TaskCtxGet(tid string) (Contx, error) {
-// 	var ctx Contx
-// 	t.m.Lock()
-// 	defer t.m.Unlock()
-
-// 	if _, ok := t.tasks[tid]; ok {
-// 		ctx = t.tasks[tid].ff.ffctx
-// 		return ctx, nil
-// 	}
-
-// 	return ctx, ErrorTaskUpdateFail
-// }
-
-// func (t *gscTask) TaskCtxSet(tid string, ctx Contx) error {
-// 	t.m.Lock()
-// 	defer t.m.Unlock()
-
-// 	if _, ok := t.tasks[tid]; ok {
-// 		t.tasks[tid].ff.ffctx = ctx
-// 		return nil
-// 	}
-
-// 	return ErrorTaskUpdateFail
-// }
-
 func (t *gscTask) TaskFFGet(tid string) (FFInfo, error) {
 	var ff FFInfo
 	t.m.Lock()
@@ -222,7 +148,7 @@ func HandleTaskMessages() {
 
 	//read msg from client, add task and exec.
 	for msg := range taskCh {
-		log.Infoln("Got cmd: ", JsonFormat(msg))
+		log.Infoln("Got cmd: ", common.JsonFormat(msg))
 		switch msg.Type {
 		case prefixStart:
 			if tid, err := taskMap.TaskAdd(msg); err == nil {
@@ -235,7 +161,7 @@ func HandleTaskMessages() {
 					log.Errorln("process task fail! ", tid, err.Error())
 				}
 			} else {
-				log.Errorln("add task fail. ", JsonFormat(msg))
+				log.Errorln("add task fail. ", common.JsonFormat(msg))
 			}
 
 		case prefixStop, prefixCancel:

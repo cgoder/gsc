@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/cgoder/gsc/common"
 	log "github.com/sirupsen/logrus"
 )
 
-type gsc struct {
+type Gsc struct {
 }
 
 type Args struct {
@@ -37,23 +38,23 @@ func Init() error {
 	return err
 }
 
-func (c *gsc) Start(ctx context.Context, args *Args, reply *Reply) error {
+func (c *Gsc) Start(ctx context.Context, args *Args, reply *Reply) error {
 	if args.msg.Flag == prefixFlag {
 		taskCh <- args.msg.Msg
 	} else {
-		err := errors.New("gsc unsupport cmd: " + args.msg.Flag)
-		log.Errorln(err.Error(), JsonFormat(args.msg))
+		err := errors.New("Gsc unsupport cmd: " + args.msg.Flag)
+		log.Errorln(err.Error(), common.JsonFormat(args.msg))
 		return err
 	}
 	return nil
 }
 
-func (c *gsc) Stop(ctx context.Context, args *Args, reply *Reply) error {
+func (c *Gsc) Stop(ctx context.Context, args *Args, reply *Reply) error {
 	if args.msg.Flag == prefixFlag {
 		taskCh <- args.msg.Msg
 	} else {
-		err := errors.New("gsc unsupport cmd: " + args.msg.Flag)
-		log.Errorln(err.Error(), JsonFormat(args.msg))
+		err := errors.New("Gsc unsupport cmd: " + args.msg.Flag)
+		log.Errorln(err.Error(), common.JsonFormat(args.msg))
 		return err
 	}
 	return nil

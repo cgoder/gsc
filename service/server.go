@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cgoder/gsc/config"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 )
@@ -14,9 +15,8 @@ import (
 var (
 
 	//websocket
-	port           = "8080"
 	allowedOrigins = []string{
-		"http://localhost:" + port,
+		"http://localhost:" + config.Conf.HTTPPort,
 	}
 	upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -48,10 +48,10 @@ func startServer() error {
 	http.HandleFunc("/files", handleFiles)
 	http.Handle("/", http.FileServer(http.Dir("./")))
 
-	log.Println("Wait websocket to connect on port: ", port)
+	log.Println("Wait websocket to connect on Port: ", config.Conf.HTTPPort)
 	log.Println("Waiting for connection...")
 
-	err := http.ListenAndServe(":"+port, nil)
+	err := http.ListenAndServe(":"+config.Conf.HTTPPort, nil)
 	if err != nil {
 		log.Errorln("ListenAndServe: ", err)
 		return err

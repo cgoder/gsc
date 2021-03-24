@@ -1,10 +1,9 @@
-package cmd
+package common
 
 import (
+	"fmt"
 	"os"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -21,8 +20,8 @@ const (
 )
 
 func ParseArgs() {
-	log.Println(banner)
-	log.Println("version " + time.Now().Local().String() + "\n\n")
+	fmt.Println(banner)
+	fmt.Println("version " + time.Now().Local().String() + "\n\n")
 
 	args := os.Args
 

@@ -2,11 +2,14 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 	"time"
 
+	"github.com/cgoder/gsc/config"
 	"github.com/cgoder/gsc/ffmpeg"
+	"github.com/google/gops/agent"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -122,13 +125,23 @@ func checkFFmpeg() error {
 	if err != nil {
 		return err
 	}
-	log.Debugln("Checking FFmpeg version....\u001b[32m" + version + "\u001b[0m")
+	fmt.Println("Checking FFmpeg version....\u001b[32m" + version + "\u001b[0m")
 
 	probe := &ffmpeg.FFProbe{}
 	version, err = probe.Version()
 	if err != nil {
 		return err
 	}
-	log.Debugln("Checking FFprobe version...\u001b[32m" + version + "\u001b[0m\n")
+	fmt.Println("Checking FFprobe version...\u001b[32m" + version + "\u001b[0m\n")
 	return nil
+}
+
+func DebugRuntime() {
+	if err := agent.Listen(agent.Options{
+		Addr:            ":" + config.Conf.DebugPort,
+		ShutdownCleanup: true, // automatically closes on os.Interrupt
+	}); err != nil {
+		log.Errorln(err)
+	}
+	time.Sleep(time.Minute)
 }
