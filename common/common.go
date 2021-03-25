@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-
-	log "github.com/sirupsen/logrus"
 )
 
 //JsonFormat Json outupt.
@@ -28,7 +26,7 @@ func GetFileMd5(filePath string) string {
 	pFile, err := os.Open(filePath)
 	defer pFile.Close()
 	if err != nil {
-		log.Errorln("open file fail! ", filePath, err)
+		// log.Errorln("open file fail! ", filePath, err)
 		return ""
 	}
 

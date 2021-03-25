@@ -1,8 +1,8 @@
 {
 	"debug": false,
 	"log_level": "debug",
-	"http_port": "8084",
-	"rpc_port": "8085",
-	"debug_port": "8086",
-	"register_addr": "0.0.0.0:2181"
+	"http_port": "8080",
+	"rpc_port": "8081",
+	"debug_port": "8082",
+	"register_addr": "1.2.0.0:2181"
 }

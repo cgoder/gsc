@@ -5,6 +5,6 @@
 FROM gsf/ffmpeg:latest
 MAINTAINER gcoder <gcoder@live.com>
 
-COPY ./gsc /opt/bin/
+COPY ./gsc /opt/gsc/
 
-CMD ["/opt/bin/gsc"]
+CMD ["/opt/gsc/gsc"]

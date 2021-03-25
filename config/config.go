@@ -8,6 +8,7 @@ import (
 
 	"github.com/cgoder/gsc/common"
 	"github.com/fsnotify/fsnotify"
+	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -32,49 +33,52 @@ func LoadConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
-	viper.SetDefault("Debug", "false")
-	viper.SetDefault("LogLevel", "debug")
-	viper.SetDefault("HTTPPort", "8084")
-	viper.SetDefault("RPCPort", "8085")
-	viper.SetDefault("DebugPort", "8086")
-	viper.SetDefault("RegisterAddr", "0.0.0.0:2181")
+	viper.SetDefault("debug", "true")
+	viper.SetDefault("log_level", "debug")
+	viper.SetDefault("http_port", "8080")
+	viper.SetDefault("rpc_port", "8081")
+	viper.SetDefault("debug_port", "8082")
+	viper.SetDefault("register_addr", "register")
 
 	viper.SetConfigType("json")
 	viper.SetConfigName("config")
 	viper.AddConfigPath("./")
-	viper.AddConfigPath("/etc/")
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Println("read config file error:", err)
-		fmt.Println("load default config.")
+		fmt.Println("load default config.", err)
 		// panic("init config error")
 	}
 
-	err = viper.Unmarshal(&Conf)
+	err = viper.Unmarshal(&Conf, func(dc *mapstructure.DecoderConfig) {
+		dc.TagName = "json"
+	})
 	if err != nil {
 		fmt.Println("init config unmarshal error:", err)
 		// panic("init config unmarshal error")
 	} else {
-		fmt.Println("load config ok", Conf)
+		configMD5 = common.GetFileMd5("config.json")
+		fmt.Println("load config ok", Conf, configMD5)
 	}
 
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
-		tmpMD5 := common.GetFileMd5("/etc/config.json")
+		tmpMD5 := common.GetFileMd5("config.json")
 		if tmpMD5 == configMD5 {
-			fmt.Println("config file changed, but MD5 same.")
+			fmt.Println("config file changed, but MD5 same.", tmpMD5)
 			return
 		}
 
 		var tmpConf Config
-		if err := viper.Unmarshal(&tmpConf); err != nil {
+		if err := viper.Unmarshal(&tmpConf, func(dc *mapstructure.DecoderConfig) {
+			dc.TagName = "json"
+		}); err != nil {
 			fmt.Println("Config file reload parse error:", err)
 			return
 		}
 
 		configMD5 = tmpMD5
 		Conf = tmpConf
-		fmt.Println("Config file reload ok:", Conf)
+		fmt.Println("Config file reload ok:", Conf, configMD5)
 
 		ReloadConfig(Conf)
 	})
