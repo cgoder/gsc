@@ -19,14 +19,14 @@ var (
 		"http://localhost:" + config.Conf.HTTPPort,
 	}
 	upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			for _, origin := range allowedOrigins {
-				if r.Header.Get("Origin") == origin {
-					return true
-				}
-			}
-			return false
-		},
+		// CheckOrigin: func(r *http.Request) bool {
+		// 	for _, origin := range allowedOrigins {
+		// 		if r.Header.Get("Origin") == origin {
+		// 			return true
+		// 		}
+		// 	}
+		// 	return false
+		// },
 	}
 )
 
@@ -62,7 +62,7 @@ func startServer() error {
 func handleConnections(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Errorln("websocket connection failed!")
+		log.Errorln("websocket connection failed!", err.Error())
 		return
 	}
 	defer ws.Close()
